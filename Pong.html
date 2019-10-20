@@ -1,0 +1,158 @@
+<! DOCTYPE html>
+<html lang="eng">
+<head>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<meta content="utf-8" http-equiv="encoding">
+</head>
+<body>
+<canvas id="gameCanvas" width="700" height="500"> </canvas>
+
+<script>
+var canvas;
+var canvasContext;
+var paddle1X=10;
+var paddle1Y=250;
+var paddle2X=683;
+var paddle2Y=250;
+const PADDLE_HEIGHT=70;
+const PADDLE_WIDTH=7;
+var ballX = 400;
+var ballSpeedX=5;
+var ballY= 300;
+var ballSpeedY=5;
+var radius=10;
+var score1=0;
+var score2=0;
+const WINNING_SCORE=3;
+var showingWinScreen = false;
+function calculateMousePos(evt) {
+	var rect = canvas.getBoundingClientRect();
+	var root = document.documentElement;
+	var mouseX = evt.clientX - rect.left - root.scrollLeft;
+	var mouseY = evt.clientY - rect.top - root.scrollTop;
+	return{
+		x: mouseX,
+		y: mouseY
+	};
+}
+function handleMouseClick (evt) {
+if (showingWinScreen) {
+score1=0;
+score2=0;
+showingWinScreen=false;
+}
+}
+
+window.onload = function(){
+	canvas= document.getElementById('gameCanvas');
+	canvasContext= canvas.getContext('2d');
+	var framesPerSec=30;
+	//motion of the ball
+	setInterval(function() { 
+		moveEverything();
+		drawEverything();  
+		},1000/framesPerSec);
+		canvas.addEventListener('mousedown', handleMouseClick);
+		canvas.addEventListener('mousemove', function(evt) {
+		var mousePos = calculateMousePos(evt);
+		paddle1Y = mousePos.y - PADDLE_HEIGHT/2;
+		});
+
+}
+function moveEverything() {
+if (showingWinScreen) {
+	return;
+}
+computerMovement();
+	ballX = ballX + ballSpeedX;
+	ballY = ballY + ballSpeedY;
+	
+	if (ballX-radius/2<=paddle1X + PADDLE_WIDTH  && ballX-radius/2>paddle1X + PADDLE_WIDTH + ballSpeedX && ballY >=paddle1Y && ballY<=paddle1Y+PADDLE_HEIGHT) {
+		ballSpeedX = -ballSpeedX;
+		ballSpeedY = 0.35*(ballY - (paddle1Y+PADDLE_HEIGHT/2));
+	}
+	if (ballX-radius/2 <=0 && (ballY < paddle1Y || ballY > paddle1Y + PADDLE_HEIGHT)) {
+		score2++;
+		ballReset();
+		}
+	
+	if (ballX+radius/2 >= paddle2X && ballX+radius/2 < paddle2X + ballSpeedX && ballY >=paddle2Y && ballY<=paddle2Y+PADDLE_HEIGHT) {
+		ballSpeedX = -ballSpeedX;
+		ballSpeedY = 0.35*(ballY - (paddle2Y+PADDLE_HEIGHT/2));
+	}
+	if (ballX+radius/2 >=canvas.width && (ballY < paddle2Y || ballY > paddle2Y + PADDLE_HEIGHT)) {
+		score1++;
+		ballReset();
+	}
+	
+	if (ballY-radius/2<=0) {
+	ballSpeedY = -ballSpeedY;
+	}
+	if (ballY+radius/2>=canvas.height) {
+	ballSpeedY = -ballSpeedY;
+	}
+
+}
+function drawNet() {
+	for (var i=0; i<canvas.height; i+=40) {
+		colorRect(canvas.width/2-1, i, 2, 20,'white');
+	}
+}
+function drawEverything() {
+
+		//draw the background to black
+		colorRect(0,0,canvas.width,canvas.height,'black');
+		if (showingWinScreen) {
+			if (score1>=WINNING_SCORE) {
+			canvasContext.fillStyle = 'white';
+			canvasContext.fillText ("Player1 won. ", 310, 200);
+			canvasContext.fillText ("Click to continue!", 300, 250);
+			}
+			else if (score2>=WINNING_SCORE) {
+			canvasContext.fillStyle = 'white';
+			canvasContext.fillText ("Player2 won. ", 310, 200);
+			canvasContext.fillText ("Click to continue!", 300, 250);
+
+			}
+	return;
+	
+	}
+		//draw paddle1
+		colorRect(paddle1X, paddle1Y, PADDLE_WIDTH, PADDLE_HEIGHT, 'white');
+		//draw paddle2
+		colorRect(paddle2X, paddle2Y, PADDLE_WIDTH, PADDLE_HEIGHT, 'white');
+		//draw the ball
+		colorCircle(ballX, ballY,radius,'white');
+		//draw score1
+		canvasContext.fillText(score1, 100, 100)
+		//draw score2
+		canvasContext.fillText(score2, 550, 100)
+		drawNet();
+}
+function computerMovement() {
+	if (ballY < paddle2Y+PADDLE_HEIGHT/4)
+	paddle2Y -=5;
+	if (ballY > paddle2Y+3*PADDLE_HEIGHT/4)
+	paddle2Y +=5;
+}
+function colorRect(leftX, topX,width, height, color) {
+	canvasContext.fillStyle = color;
+		canvasContext.fillRect(leftX,topX,width,height);
+}
+function colorCircle(centerX, centerY, radius, color){
+		canvasContext.fillStyle = color;
+		canvasContext.beginPath();
+		canvasContext.arc(centerX,centerY,radius,0,Math.PI*2,true);
+		canvasContext.fill();
+		}
+function ballReset() {
+	if (score1>=WINNING_SCORE || score2>=WINNING_SCORE) {
+	showingWinScreen=true;
+	}
+ballSpeedX = -ballSpeedX;
+ballX = canvas.width/2;
+ballY=canvas.height/2;
+}
+</script>
+</body>
+</html>
